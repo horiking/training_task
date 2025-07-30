@@ -13,7 +13,7 @@ export default function Footer() {
         textAlign: "center",
       }}
     >
-      <Typography variant="body2">{new Date().getFullYear()} - Team 5</Typography>
+      <Typography variant="body2">{new Date().getFullYear()} - DB Team 5</Typography>
     </Box>
   );
 }
