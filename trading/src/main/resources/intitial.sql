@@ -1,43 +1,49 @@
--- Create the database
+-- Drop tables if they exist
 CREATE DATABASE IF NOT EXISTS reconciliation_db;
 USE reconciliation_db;
-
--- Create the Instrument table
-CREATE TABLE Instrument (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Symbol VARCHAR(20),
-    Name VARCHAR(100),
+DROP TABLE IF EXISTS trade;
+DROP TABLE IF EXISTS instrument;
+DROP TABLE IF EXISTS reconciliation_difference CASCADE;
+DROP TABLE IF EXISTS reconciliation_run CASCADE;
+ 
+-- Trade Table
+CREATE TABLE trade (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    trade_id VARCHAR(255),
+    instrument VARCHAR(255),
+    price NUMERIC,
+    quantity INTEGER,
+    source_system VARCHAR(255),
+    trade_date DATE
+);
+ 
+ 
+-- Instrument Table
+CREATE TABLE instrument (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    symbol VARCHAR(50),
+    name VARCHAR(100),
     isin VARCHAR(20)
 );
-
--- Create the trade table
-CREATE TABLE trade (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    trade_id VARCHAR(50),
-    instrument INT,
-    price DECIMAL(20, 4),
-    quantity INT,
-    source_system VARCHAR(50),
-    trade_date DATE,
-    FOREIGN KEY (instrument) REFERENCES Instrument(ID)
-);
-
--- Create the reconciliation_run table
+ 
+-- Reconciliation Run Table
 CREATE TABLE reconciliation_run (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    run_date DATE,
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    run_date TIMESTAMP,
     status VARCHAR(20),
-    Matched_count INT,
-    unMatched_count INT
+    matched_count INTEGER,
+    unmatched_count INTEGER
 );
-
--- Create the reconciliation_Diff table
-CREATE TABLE reconciliation_Diff (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    trade_id VARCHAR(50),
-    field_name VARCHAR(50),
+ 
+-- Reconciliation Difference Table
+CREATE TABLE reconciliation_difference (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    trade_id VARCHAR(255),
+    field_name VARCHAR(100),
     value_system_a VARCHAR(255),
     value_system_b VARCHAR(255),
-    reconciliation_run_id INT,
-    FOREIGN KEY (reconciliation_run_id) REFERENCES reconciliation_run(ID)
+    reconciliation_run_id INT UNSIGNED,
+    CONSTRAINT fk_run_id FOREIGN KEY (reconciliation_run_id) REFERENCES reconciliation_run(id) ON DELETE CASCADE
 );
+
+ 
