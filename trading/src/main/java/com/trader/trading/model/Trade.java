@@ -13,7 +13,7 @@ public class Trade {
     private String tradeId;
 
     @ManyToOne
-    @JoinColumn(name = "instrument")
+    @JoinColumn(name = "instrument_id")  // Лучше указать имя столбца явно
     private Instrument instrument;
 
     private Double price;
@@ -23,5 +23,61 @@ public class Trade {
 
     private LocalDate tradeDate;
 
-    // Getters and Setters
+    // Геттеры и сеттеры
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getTradeId() {
+        return tradeId;
+    }
+
+    public void setTradeId(String tradeId) {
+        this.tradeId = tradeId;
+    }
+
+    public Instrument getInstrument() {
+        return instrument;
+    }
+
+    public void setInstrument(Instrument instrument) {
+        this.instrument = instrument;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    public String getSourceSystem() {
+        return sourceSystem;
+    }
+
+    public void setSourceSystem(String sourceSystem) {
+        this.sourceSystem = sourceSystem;
+    }
+
+    public LocalDate getTradeDate() {
+        return tradeDate;
+    }
+
+    public void setTradeDate(LocalDate tradeDate) {
+        this.tradeDate = tradeDate;
+    }
 }
