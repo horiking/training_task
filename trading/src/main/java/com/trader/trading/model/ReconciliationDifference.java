@@ -7,7 +7,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
 @Entity
-public class ReconciliationDiff {
+public class ReconciliationDifference {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
