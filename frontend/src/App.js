@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Trades from "./pages/Trades"; // Make sure this file exists
 import "./App.css";
 
+
 function App() {
   return (
     <Router>
