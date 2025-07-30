@@ -1,41 +1,60 @@
-// src/pages/Instruments.jsx
 import React, { useEffect, useState } from "react";
-import { Container, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, TextField, Box, CircularProgress, Alert } from "@mui/material";
+import {
+  Container,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  TextField,
+  Box,
+  CircularProgress,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { getInstruments, addInstrument, deleteInstrument } from "../services/instrumentService";
+import EditIcon from "@mui/icons-material/Edit";
+import { getInstruments, addInstrument, updateInstrument, deleteInstrument } from "../services/instrumentService";
 
 function Instruments() {
-const SAMPLE_INSTRUMENTS = [
-  { symbol: "AAPL", name: "Apple Inc.", isin: "US0378331005" },
-  { symbol: "GOOG", name: "Alphabet Inc.", isin: "US02079K3059" },
-  { symbol: "MSFT", name: "Microsoft Corp.", isin: "US5949181045" },
-];
+  const SAMPLE_INSTRUMENTS = [
+    { symbol: "AAPL", name: "Apple Inc.", isin: "US0378331005" },
+    { symbol: "GOOG", name: "Alphabet Inc.", isin: "US02079K3059" },
+    { symbol: "MSFT", name: "Microsoft Corp.", isin: "US5949181045" },
+  ];
 
   const [instruments, setInstruments] = useState([]);
   const [form, setForm] = useState({ symbol: "", name: "", isin: "" });
+  const [editForm, setEditForm] = useState({ symbol: "", name: "", isin: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   useEffect(() => {
     fetchInstruments();
   }, []);
 
   const fetchInstruments = async () => {
-  setLoading(true);
-  setError("");
-  try {
-    const data = await getInstruments();
-    // If no instruments in backend, use sample data
-    setInstruments(data.length > 0 ? data : SAMPLE_INSTRUMENTS);
-  } catch (err) {
-    console.error("Error fetching instruments:", err);
-    setError("Backend unreachable. Showing sample data.");
-    setInstruments(SAMPLE_INSTRUMENTS); // fallback
-  } finally {
-    setLoading(false);
-  }
-};
-
+    setLoading(true);
+    setError("");
+    try {
+      const data = await getInstruments();
+      setInstruments(data.length > 0 ? data : SAMPLE_INSTRUMENTS);
+    } catch (err) {
+      console.error("Error fetching instruments:", err);
+      setError("Backend unreachable. Showing sample data.");
+      setInstruments(SAMPLE_INSTRUMENTS);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -51,6 +70,28 @@ const SAMPLE_INSTRUMENTS = [
     } catch (err) {
       console.error("Error adding instrument:", err);
       setError("Failed to add instrument. Please try again.");
+    }
+  };
+
+  // Open edit dialog
+  const handleEditClick = (instr) => {
+    setEditForm({ ...instr });
+    setIsEditOpen(true);
+  };
+
+  const handleEditChange = (e) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+
+  const handleUpdateInstrument = async () => {
+    setError("");
+    try {
+      await updateInstrument(editForm.symbol, editForm);
+      setIsEditOpen(false);
+      fetchInstruments();
+    } catch (err) {
+      console.error("Error updating instrument:", err);
+      setError("Failed to update instrument. Please try again.");
     }
   };
 
@@ -71,7 +112,11 @@ const SAMPLE_INSTRUMENTS = [
         Instrument Management
       </Typography>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       {/* Add Instrument Form */}
       <Box component="form" onSubmit={handleAddInstrument} sx={{ mb: 3, display: "flex", flexWrap: "wrap", gap: 2 }}>
@@ -107,11 +152,10 @@ const SAMPLE_INSTRUMENTS = [
                     <TableCell>{instrument.name}</TableCell>
                     <TableCell>{instrument.isin}</TableCell>
                     <TableCell align="center">
-                      <Button
-                        color="error"
-                        onClick={() => handleDelete(instrument.symbol)}
-                        startIcon={<DeleteIcon />}
-                      >
+                      <Button color="primary" onClick={() => handleEditClick(instrument)} startIcon={<EditIcon />}>
+                        Edit
+                      </Button>
+                      <Button color="error" onClick={() => handleDelete(instrument.symbol)} startIcon={<DeleteIcon />}>
                         Delete
                       </Button>
                     </TableCell>
@@ -128,6 +172,22 @@ const SAMPLE_INSTRUMENTS = [
           </Table>
         </TableContainer>
       )}
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditOpen} onClose={() => setIsEditOpen(false)}>
+        <DialogTitle>Edit Instrument</DialogTitle>
+        <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+          <TextField label="Symbol" name="symbol" value={editForm.symbol} disabled />
+          <TextField label="Name" name="name" value={editForm.name} onChange={handleEditChange} required />
+          <TextField label="ISIN" name="isin" value={editForm.isin} onChange={handleEditChange} required />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsEditOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleUpdateInstrument}>
+            Update
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

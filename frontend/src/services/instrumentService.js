@@ -14,3 +14,8 @@ export const addInstrument = async (instrument) => {
 export const deleteInstrument = async (symbol) => {
   await api.delete(`/instruments/${symbol}`);
 };
+
+export const updateInstrument = async (symbol, updatedFields) => {
+  const res = await api.put(`/instruments/${symbol}`, updatedFields);
+  return res.data;
+};
