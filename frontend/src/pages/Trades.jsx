@@ -20,6 +20,37 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 
 function Trades() {
+  // Add this sample data near the top of Trades.jsx
+const SAMPLE_TRADES = [
+  {
+    id: 1,
+    trade_id: "T1001",
+    instrument: "AAPL",
+    price: 185.5,
+    quantity: 100,
+    source_system: "Bloomberg",
+    trade_date: "2025-07-25",
+  },
+  {
+    id: 2,
+    trade_id: "T1002",
+    instrument: "GOOG",
+    price: 2730.0,
+    quantity: 50,
+    source_system: "Reuters",
+    trade_date: "2025-07-28",
+  },
+  {
+    id: 3,
+    trade_id: "T1003",
+    instrument: "MSFT",
+    price: 310.25,
+    quantity: 200,
+    source_system: "InternalSystem",
+    trade_date: "2025-07-29",
+  },
+];
+
   // State
   const [trades, setTrades] = useState([]);
   const [form, setForm] = useState({
@@ -38,20 +69,23 @@ function Trades() {
     fetchTrades();
   }, []);
 
-  // Fetch trades from backend
-  const fetchTrades = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const data = await getTrades();
-      setTrades(data);
-    } catch (err) {
-      console.error("Error fetching trades:", err);
-      setError("Failed to load trades. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+ // Fetch trades from backend
+const fetchTrades = async () => {
+  setLoading(true);
+  setError("");
+  try {
+    const data = await getTrades();
+    // If backend returns an empty array, use sample data
+    setTrades(data.length > 0 ? data : SAMPLE_TRADES);
+  } catch (err) {
+    console.error("Error fetching trades:", err);
+    setError("Backend unreachable. Showing sample data.");
+    setTrades(SAMPLE_TRADES); // fallback
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Handle input changes
   const handleChange = (e) => {
