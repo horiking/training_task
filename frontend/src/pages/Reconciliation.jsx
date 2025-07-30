@@ -1,33 +1,56 @@
+// src/pages/Reconciliation.jsx
 import React, { useState } from "react";
-import { Box, Button, Typography, Accordion, AccordionSummary, AccordionDetails, Table, TableHead, TableRow, TableCell, TableBody, Paper } from "@mui/material";
+import { Box, Button, Typography, Accordion, AccordionSummary, AccordionDetails, Table, TableHead, TableRow, TableCell, TableBody, Paper, CircularProgress } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-// dummy data, change with backend once done
-const sampleData = [
-  {
-    tradeId: "T001",
-    differences: [
-      { field: "price", systemA: 100, systemB: 102 },
-      { field: "quantity", systemA: 50, systemB: 50 },
-    ],
-  },
-  {
-    tradeId: "T002",
-    differences: [
-      { field: "price", systemA: 200, systemB: 200 },
-      { field: "quantity", systemA: 30, systemB: 25 },
-    ],
-  },
-];
+import { startReconciliation, getReconciliationStatus, getReconciliationDifferences } from "../services/reconciliationService";
 
 export default function Reconciliation() {
-  const [lastRun] = useState({
-    runId: "RUN-20250730-01",
-    timestamp: new Date().toLocaleString(),
-  });
+  const [lastRun, setLastRun] = useState(null);
+  const [groups, setGroups] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const matchedCount = sampleData.filter((group) => group.differences.every((d) => d.systemA === d.systemB)).length;
-  const unmatchedCount = sampleData.length - matchedCount;
+  const handleRun = async () => {
+    setLoading(true);
+    try {
+      // 1) kick off a new run
+      const runId = await startReconciliation();
+      const timestamp = new Date().toLocaleString();
+      setLastRun({ runId, timestamp });
+
+      // 2) poll status until COMPLETED
+      let status = await getReconciliationStatus(runId);
+      while (status !== "COMPLETED") {
+        await new Promise((r) => setTimeout(r, 1000));
+        status = await getReconciliationStatus(runId);
+      }
+
+      // 3) fetch differences
+      const diffs = await getReconciliationDifferences(runId);
+
+      // 4) group by tradeId
+      const map = {};
+      diffs.forEach(({ tradeId, fieldName, valueSystemA, valueSystemB }) => {
+        if (!map[tradeId]) {
+          map[tradeId] = { tradeId, differences: [] };
+        }
+        map[tradeId].differences.push({
+          field: fieldName,
+          systemA: valueSystemA,
+          systemB: valueSystemB,
+        });
+      });
+      setGroups(Object.values(map));
+    } catch (err) {
+      console.error("Reconciliation error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // count matched/unmatched
+  const matchedCount = groups.filter((g) => g.differences.length === 0).length;
+  const unmatchedCount = groups.length - matchedCount;
 
   return (
     <Box p={3} maxWidth="800px" mx="auto">
@@ -35,27 +58,29 @@ export default function Reconciliation() {
         Reconciliation
       </Typography>
 
-      <Button variant="contained" color="primary">
-        Run Reconciliation
+      <Button variant="contained" color="primary" onClick={handleRun} disabled={loading}>
+        {loading ? <CircularProgress size={24} /> : "Run Reconciliation"}
       </Button>
 
-      <Box mt={2} mb={4}>
-        <Typography variant="subtitle2" color="textSecondary">
-          Last run: {lastRun.runId} ({lastRun.timestamp})
-        </Typography>
-        <Typography component="span" mr={2}>
-          Matched groups: <strong>{matchedCount}</strong>
-        </Typography>
-        <Typography component="span">
-          Unmatched groups: <strong>{unmatchedCount}</strong>
-        </Typography>
-      </Box>
+      {lastRun && (
+        <Box mt={2} mb={4}>
+          <Typography variant="subtitle2" color="textSecondary">
+            Last run: {lastRun.runId} ({lastRun.timestamp})
+          </Typography>
+          <Typography component="span" mr={2}>
+            Matched groups: <strong>{matchedCount}</strong>
+          </Typography>
+          <Typography component="span">
+            Unmatched groups: <strong>{unmatchedCount}</strong>
+          </Typography>
+        </Box>
+      )}
 
-      {sampleData.map((group) => (
+      {groups.map((group) => (
         <Accordion key={group.tradeId}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography>
-              Trade ID: <strong>{group.tradeId}</strong> — {group.differences.some((d) => d.systemA !== d.systemB) ? "⚠️ Differences found" : "✅ All fields match"}
+              Trade ID: <strong>{group.tradeId}</strong> — {group.differences.length > 0 ? "⚠️ Differences found" : "✅ All fields match"}
             </Typography>
           </AccordionSummary>
 
@@ -70,35 +95,49 @@ export default function Reconciliation() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {group.differences.map(({ field, systemA, systemB }) => (
-                    <TableRow key={field}>
-                      <TableCell>{field}</TableCell>
-                      <TableCell
-                        align="right"
-                        sx={{
-                          fontWeight: systemA !== systemB ? "bold" : "normal",
-                          color: systemA !== systemB ? "error.main" : "inherit",
-                        }}
-                      >
-                        {systemA}
-                      </TableCell>
-                      <TableCell
-                        align="right"
-                        sx={{
-                          fontWeight: systemA !== systemB ? "bold" : "normal",
-                          color: systemA !== systemB ? "error.main" : "inherit",
-                        }}
-                      >
-                        {systemB}
+                  {group.differences.length > 0 ? (
+                    group.differences.map(({ field, systemA, systemB }) => (
+                      <TableRow key={field}>
+                        <TableCell>{field}</TableCell>
+                        <TableCell
+                          align="right"
+                          sx={{
+                            fontWeight: systemA !== systemB ? "bold" : "normal",
+                            color: systemA !== systemB ? "error.main" : "inherit",
+                          }}
+                        >
+                          {systemA}
+                        </TableCell>
+                        <TableCell
+                          align="right"
+                          sx={{
+                            fontWeight: systemA !== systemB ? "bold" : "normal",
+                            color: systemA !== systemB ? "error.main" : "inherit",
+                          }}
+                        >
+                          {systemB}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={3} align="center">
+                        No differences
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </Paper>
           </AccordionDetails>
         </Accordion>
       ))}
+
+      {!lastRun && !loading && (
+        <Typography variant="body2" color="textSecondary" mt={2}>
+          Click “Run Reconciliation” to start.
+        </Typography>
+      )}
     </Box>
   );
 }
