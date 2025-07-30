@@ -1,29 +1,39 @@
+// src/main/java/com/trader/trading/controller/TradeController.java
 package com.trader.trading.controller;
 
-
+import com.trader.trading.model.Trade;
+import com.trader.trading.service.TradeService;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/trades")
-public class TradesController {
+@CrossOrigin(origins = "http://localhost:3000")  // allow your React dev server
+public class TradeController {
 
-    @GetMapping
-    public String helloTrade() {
-        return "Hello from TradeController - GET /api/trades";
+    private final TradeService service;
+
+    public TradeController(TradeService service) {
+        this.service = service;
     }
 
-    @PostMapping
-    public String helloTradePost() {
-        return "Hello from TradeController - POST /api/trades";
+    @GetMapping
+    public List<Trade> getAll() {
+        return service.listAll();
     }
 
     @GetMapping("/{id}")
-    public String helloTradeById(@PathVariable String id) {
-        return "Hello from TradeController - GET /api/trades/" + id;
+    public Trade getOne(@PathVariable Long id) {
+        return service.getById(id);
+    }
+
+    @PostMapping
+    public Trade create(@RequestBody Trade trade) {
+        return service.create(trade);
     }
 
     @DeleteMapping("/{id}")
-    public String helloTradeDelete(@PathVariable String id) {
-        return "Hello from TradeController - DELETE /api/trades/" + id;
+    public void delete(@PathVariable Long id) {
+        service.delete(id);
     }
 }
