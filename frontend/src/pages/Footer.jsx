@@ -1,7 +1,19 @@
-import React from 'react'
+import React from "react";
+import { Box, Typography } from "@mui/material";
 
 export default function Footer() {
   return (
-    <div>Footer</div>
-  )
+    <Box
+      component="footer"
+      sx={{
+        py: 2,
+        mt: "auto",
+        backgroundColor: (theme) => theme.palette.primary.main,
+        color: (theme) => theme.palette.primary.contrastText,
+        textAlign: "center",
+      }}
+    >
+      <Typography variant="body2">{new Date().getFullYear()} - Team 5</Typography>
+    </Box>
+  );
 }
