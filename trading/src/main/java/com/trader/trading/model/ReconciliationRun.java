@@ -1,8 +1,14 @@
 package com.trader.trading.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 
 @Entity
 public class ReconciliationRun {
@@ -14,12 +20,11 @@ public class ReconciliationRun {
     private LocalDate runDate;
 
     private String status;
-
     private int matchedCount;
     private int unmatchedCount;
 
     @OneToMany(mappedBy = "reconciliationRun", cascade = CascadeType.ALL)
-    private List<ReconciliationDiff> differences;
+    private List<ReconciliationDifference> differences;
 
     // Getters and Setters
 }
