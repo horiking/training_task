@@ -21,6 +21,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Build with Maven
+        working-directory: trading
         run: mvn clean package -DskipTests
 
       - name: Log in to Docker Hub using CLI
