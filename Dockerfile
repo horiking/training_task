@@ -5,7 +5,7 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
  
 # 3️Copy the built JAR file into the container
-COPY target/trading/demo-0.0.1-SNAPSHOT.jar app.jar
+COPY trading/target/trading-0.0.1-SNAPSHOT.jar app.jar
 # 4️Expose the application port
 EXPOSE 8080
  
